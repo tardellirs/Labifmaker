@@ -88,7 +88,7 @@ export function AccessSettingsManager({
             <p className="mt-1 text-sm leading-6 text-slate-500">
               Qualquer conta Google poderá fazer login, independente do domínio do e-mail. Use com
               cautela — o acesso é equivalente ao de professores. O botão de login na tela de entrada
-              passará a exibir <strong>"Entrar com o Google"</strong>.
+              passará a exibir <strong>&quot;Entrar com o Google&quot;</strong>.
             </p>
           </div>
         </label>
