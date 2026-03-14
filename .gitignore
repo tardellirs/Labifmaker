@@ -1,0 +1,34 @@
+# Dependências
+node_modules
+
+# Build e cache
+.next
+dist
+coverage
+.turbo
+*.tsbuildinfo
+
+# Deploy
+.vercel
+
+# Variáveis de ambiente (nunca versionar arquivos com segredos reais)
+.env
+.env.local
+.env*.local
+# .env.local.example deve ser versionado como referência
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea
+*.swp
+*.swo

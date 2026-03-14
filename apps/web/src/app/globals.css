@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --font-body: "Avenir Next", "Segoe UI", sans-serif;
+  --font-display: "Eurostile", "Avenir Next Condensed", "Trebuchet MS", sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-slate-200;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-mist text-slate-900 antialiased;
+    background-image:
+      radial-gradient(circle at top left, rgba(74, 161, 57, 0.12), transparent 26%),
+      radial-gradient(circle at bottom right, rgba(200, 30, 30, 0.09), transparent 24%),
+      linear-gradient(180deg, #f7faf6 0%, #edf4ee 100%);
+    font-family: var(--font-body), sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), sans-serif;
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: var(--font-display), sans-serif;
+  }
+
+  .section-shell {
+    @apply rounded-[28px] border border-white/60 bg-white/80 shadow-ambient backdrop-blur;
+  }
+
+  .grid-surface {
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+}

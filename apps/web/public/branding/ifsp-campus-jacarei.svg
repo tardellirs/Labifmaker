@@ -1,0 +1,25 @@
+<svg width="216" height="272" viewBox="0 0 216 272" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="216" height="272" rx="24" fill="white"/>
+  <circle cx="54" cy="31" r="11" fill="#D50000"/>
+  <rect x="68" y="22" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="91" y="22" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="114" y="22" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="45" y="45" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="68" y="45" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="91" y="45" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="45" y="68" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="68" y="68" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="91" y="68" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="114" y="68" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="45" y="91" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="68" y="91" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="91" y="91" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="68" y="114" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <rect x="91" y="114" width="18" height="18" rx="2.5" fill="#4AA139"/>
+  <text x="108" y="157" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" letter-spacing="0.4" fill="#111111">INSTITUTO</text>
+  <text x="108" y="180" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" letter-spacing="0.4" fill="#111111">FEDERAL</text>
+  <text x="108" y="206" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17.5" fill="#222222">São Paulo</text>
+  <line x1="34" y1="220" x2="182" y2="220" stroke="#7DBA5D" stroke-width="2"/>
+  <text x="108" y="240" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="16.5" fill="#111111">Campus</text>
+  <text x="108" y="260" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="16.5" fill="#111111">Jacareí</text>
+</svg>
