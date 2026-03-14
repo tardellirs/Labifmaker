@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -36,7 +35,7 @@ export function LandingHero({ primaryHref, primaryLabel }: LandingHeroProps) {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg">
-              <Link href={primaryHref}>{primaryLabel}</Link>
+              <a href={primaryHref}>{primaryLabel}</a>
             </Button>
             <Button asChild size="lg" variant="secondary">
               <a href="#equipamentos">Ver equipamentos</a>
