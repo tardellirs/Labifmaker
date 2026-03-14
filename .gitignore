@@ -29,6 +29,10 @@ pnpm-debug.log*
 Thumbs.db
 AI*.md
 AI_PROJECT_CONTEXT.md
+CLAUDE.md
+
+# Claude Code
+.claude/
 
 # Editor
 .idea
