@@ -12,19 +12,19 @@ O LabIF Maker é o laboratório de fabricação digital do IFSP Jacareí, equipa
 - Visualização dos equipamentos disponíveis e seus status em tempo real
 - Solicitação de agendamento em 3 passos:
   1. **Data** — calendário visual com dias disponíveis destacados e dias sem vaga bloqueados
-  2. **Turno** — seleção do turno liberado pela coordenação para aquele dia (ex.: Turno 1 · 08:00 às 20:00)
+  2. **Turno** — seleção do turno liberado pela coordenação para aquele dia (ex.: Turno 1 · 08:00 às 12:00)
   3. **Horário exato** — definição do horário de início e saída dentro do turno, com validação inline
 - Acompanhamento do histórico de pedidos (pendente, aprovado, indeferido, cancelado)
-- Notificação por e-mail sobre decisões da coordenação
+- Notificação por e-mail de agendamento e aprovações
 - Painel com badge adaptado ao tipo de conta: "Painel do Professor", "Painel do Aluno" ou "Painel do Usuário"
 
 ### Para a coordenação
 
-- Painel com indicadores (pendentes, aprovados futuros, finalizados) e calendário de agendamentos
+- Painel com indicadores (pendentes, aprovados, finalizados) e calendário de agendamentos
 - Fila de avaliação de solicitações com comentário e decisão
 - Publicação de janelas de disponibilidade (turnos) do laboratório
-- Cadastro, remoção e reordenação de equipamentos por arrastar e soltar
-- Gerenciamento de coordenadores (qualquer e-mail) e destinatários de notificações
+- Cadastro, remoção e reordenação de equipamentos
+- Gerenciamento de coordenadores e destinatários de notificações
 - Histórico completo de agendamentos aprovados
 - **Controle de acesso ampliado:**
   - Checkbox para permitir login de alunos (`@aluno.ifsp.edu.br`)
@@ -41,12 +41,11 @@ O LabIF Maker é o laboratório de fabricação digital do IFSP Jacareí, equipa
 |--------|------------|
 | Framework | Next.js 15 (App Router) |
 | Frontend | React 19, TypeScript, Tailwind CSS |
-| Autenticação | Firebase Auth (Google Provider) |
+| Autenticação | Firebase Auth |
 | Banco de dados | Cloud Firestore |
 | E-mail | Nodemailer (SMTP/Gmail) |
-| Calendário | Google Calendar API (service account) |
+| Calendário | Google Calendar API |
 | UI | Radix UI, shadcn/ui |
-| Hospedagem | Vercel |
 
 ## Papéis de usuário
 
@@ -54,8 +53,8 @@ O LabIF Maker é o laboratório de fabricação digital do IFSP Jacareí, equipa
 |-------|---------|--------|
 | `coordenador` | Qualquer (configurável) | Painel da coordenação + agendamento |
 | `professor` | `@ifsp.edu.br` | Painel do Professor |
-| `aluno` | `@aluno.ifsp.edu.br` | Painel do Aluno (habilitado via config) |
-| `externo` | Qualquer outro | Painel do Usuário (habilitado via config) |
+| `aluno` | `@aluno.ifsp.edu.br` | Painel do Aluno (se habilitado) |
+| `externo` | Qualquer e-mail | Painel do Usuário (se habilitado) |
 
 ## Estrutura do projeto
 
@@ -66,7 +65,7 @@ Labifmaker/
 │       └── src/
 │           ├── app/            # Rotas, layouts e APIs (App Router)
 │           ├── components/
-│           │   ├── auth/       # Botão de login Google com estado de carregamento
+│           │   ├── auth/       # Login com com Firebase Auth
 │           │   ├── booking/    # Formulário de agendamento (3 passos)
 │           │   ├── coordinator/# Painel da coordenação (calendário, filas, config)
 │           │   ├── landing/    # Seções da landing page
@@ -84,8 +83,7 @@ Labifmaker/
 │           │   └── utils/      # cn, role-labels
 │           └── types/          # Tipos por domínio (user, equipment, booking, availability)
 ├── docs/                       # Documentação complementar
-├── package.json                # Raiz do monorepo (npm workspaces)
-└── AI_PROJECT_CONTEXT.md       # Contexto para assistentes de IA
+└──  package.json               # Raiz do monorepo (npm workspaces)
 ```
 
 ## Pré-requisitos
@@ -99,7 +97,7 @@ Labifmaker/
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/seu-usuario/labifmaker.git
+git clone https://github.com/tardellirs/labifmaker.git
 cd labifmaker
 
 # 2. Instale as dependências
@@ -134,7 +132,6 @@ Copie `.env.local.example` para `.env.local` e preencha:
 | `GOOGLE_CALENDAR_CLIENT_EMAIL` | E-mail da service account do Calendar |
 | `GOOGLE_CALENDAR_PRIVATE_KEY` | Chave privada da service account do Calendar |
 
-> **Importante:** nunca versione o arquivo `.env.local` com credenciais reais. O arquivo `.env.local.example` (sem segredos) deve ser versionado como referência.
 
 ## Scripts
 
@@ -144,15 +141,6 @@ npm run build      # Build de produção
 npm run lint       # Linting com ESLint
 npm run typecheck  # Verificação de tipos com TypeScript
 ```
-
-## Deploy
-
-O projeto está preparado para deploy na **Vercel**:
-
-1. Conecte o repositório na Vercel
-2. Configure o **Root Directory** como `apps/web`
-3. Adicione as variáveis de ambiente no painel da Vercel
-4. O deploy acontece automaticamente a cada push
 
 ## Integração com Google Calendar
 
