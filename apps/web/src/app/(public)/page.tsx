@@ -1,31 +1,38 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarCheck, Download, FileText } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { cookies } from "next/headers";
 
+import { getAccessSettings } from "@/lib/auth/access";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { LandingAbout } from "@/components/landing/landing-about";
 import { LandingEquipment } from "@/components/landing/landing-equipment";
 import { LandingLocation } from "@/components/landing/landing-location";
-
-const navigation = [
-  { label: "Início", href: "#inicio" },
-  { label: "Sobre", href: "#sobre" },
-  { label: "Equipamentos", href: "#equipamentos" },
-  { label: "Agendamento", href: "#agendamento" },
-  { label: "Regras", href: "#regras" },
-  { label: "Localização", href: "#localizacao" }
-];
+import { LandingAccess } from "@/components/landing/landing-access";
 
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? "labifmaker_session";
 
 export default async function HomePage() {
-  const cookieStore = await cookies();
+  const [cookieStore, accessSettings] = await Promise.all([
+    cookies(),
+    getAccessSettings()
+  ]);
+
   const hasSession = Boolean(cookieStore.get(SESSION_COOKIE_NAME)?.value);
-  const primaryHref = hasSession ? "/app" : "/login";
+  const primaryHref = hasSession ? "/app" : "#acesso";
   const primaryLabel = "Agendar laboratório";
+
+  const navigation = [
+    { label: "Início", href: "#inicio" },
+    { label: "Sobre", href: "#sobre" },
+    { label: "Equipamentos", href: "#equipamentos" },
+    { label: "Agendamento", href: "#agendamento" },
+    { label: "Regras", href: "#regras" },
+    { label: "Localização", href: "#localizacao" },
+    ...(!hasSession ? [{ label: "Acesso", href: "#acesso" }] : [])
+  ];
 
   return (
     <div className="bg-[#f5f7f6] text-slate-900">
@@ -60,9 +67,15 @@ export default async function HomePage() {
             ))}
           </nav>
 
-          <Button asChild>
-            <Link href={primaryHref}>{primaryLabel}</Link>
-          </Button>
+          {hasSession ? (
+            <Button asChild>
+              <Link href="/app">{primaryLabel}</Link>
+            </Button>
+          ) : (
+            <Button asChild>
+              <a href="#acesso">{primaryLabel}</a>
+            </Button>
+          )}
         </div>
       </header>
 
@@ -71,31 +84,7 @@ export default async function HomePage() {
         <LandingAbout />
         <LandingEquipment />
 
-        <section className="bg-white py-10 sm:py-14" id="agendamento">
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <Card className="border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f4faf6_100%)] text-center shadow-none">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
-                <CalendarCheck className="h-6 w-6 text-emerald-700" />
-              </div>
-              <h2 className="mt-4 font-display text-3xl font-semibold text-slate-950 sm:text-4xl">
-                Quer utilizar o laboratório?
-              </h2>
-              <p className="mx-auto mt-3 max-w-2xl text-lg leading-8 text-slate-600">
-                O uso dos equipamentos requer agendamento prévio. Verifique a disponibilidade e reserve seu horário.
-              </p>
-              <div className="mt-5">
-                <Button asChild size="lg">
-                  <Link href={primaryHref}>Agendar laboratório</Link>
-                </Button>
-              </div>
-              <p className="mt-3 text-sm text-slate-500">
-                Traga seu material de consumo (filamentos, MDF, etc.) para uso pessoal.
-              </p>
-            </Card>
-          </div>
-        </section>
-
-        <section className="py-10 sm:py-14" id="regras">
+        <section className="bg-white py-10 sm:py-14" id="regras">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <Card className="mx-auto max-w-5xl border-slate-200 bg-white shadow-none">
               <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
@@ -126,6 +115,13 @@ export default async function HomePage() {
         </section>
 
         <LandingLocation />
+
+        {!hasSession && (
+          <LandingAccess
+            allowExternalUsers={accessSettings.allowExternalUsers}
+            allowStudents={accessSettings.allowStudents}
+          />
+        )}
       </main>
 
       <footer className="bg-slate-950 py-10 text-white/80">
