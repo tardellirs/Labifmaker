@@ -16,7 +16,7 @@ export function LandingLocation() {
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="h-[340px] overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+          <div className="h-[340px] overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm lg:h-auto lg:self-stretch">
             <iframe
               allowFullScreen
               className="block h-full w-full"
@@ -28,9 +28,9 @@ export function LandingLocation() {
             />
           </div>
 
-          <div className="space-y-4 lg:grid lg:h-[340px] lg:grid-rows-3 lg:gap-4 lg:space-y-0">
-            <Card className="border-slate-200 bg-white shadow-none lg:h-full">
-              <div className="flex items-start gap-4 lg:h-full lg:items-center">
+          <div className="space-y-4">
+            <Card className="border-slate-200 bg-white p-3 shadow-none sm:p-4">
+              <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50">
                   <MapPin className="h-6 w-6 text-emerald-700" />
                 </div>
@@ -47,24 +47,22 @@ export function LandingLocation() {
               </div>
             </Card>
 
-            <Card className="border-slate-200 bg-white shadow-none lg:h-full">
-              <div className="flex items-start gap-4 lg:h-full lg:items-center">
+            <Card className="border-slate-200 bg-white p-3 shadow-none sm:p-4">
+              <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50">
                   <Clock3 className="h-6 w-6 text-emerald-700" />
                 </div>
                 <div>
                   <CardTitle>Atendimento</CardTitle>
-                  <CardDescription className="mt-2">
-                    As disponibilidades são publicadas pela coordenação dentro do sistema.
-                    <br />
-                    Consulte as janelas liberadas antes de enviar o pedido.
+                  <CardDescription className="mt-1">
+                    As disponibilidades de horários são publicadas pela coordenação dentro do sistema.
                   </CardDescription>
                 </div>
               </div>
             </Card>
 
-            <Card className="border-slate-200 bg-white shadow-none lg:h-full">
-              <div className="flex items-start gap-4 lg:h-full lg:items-center">
+            <Card className="border-slate-200 bg-white p-3 shadow-none sm:p-4">
+              <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50">
                   <Phone className="h-6 w-6 text-emerald-700" />
                 </div>
