@@ -4,6 +4,15 @@ Sistema web de agendamento e gestão do laboratório de fabricação digital **L
 
 O LabIF Maker é o laboratório de fabricação digital do IFSP Jacareí, equipado com impressoras 3D, cortadora a laser, fresadora CNC e outros equipamentos. Este sistema foi desenvolvido especificamente para o campus com o objetivo de digitalizar e organizar o fluxo de uso do laboratório: professores, alunos e usuários autorizados solicitam horários pelo portal, e a coordenação avalia, aprova e gerencia tudo em um painel centralizado.
 
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-FFCA28?logo=firebase&logoColor=black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-06B6D4?logo=tailwindcss&logoColor=white)
+![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-Radix-000000?logo=shadcnui&logoColor=white)
+![Nodemailer](https://img.shields.io/badge/Nodemailer-SMTP-22B573?logo=maildotru&logoColor=white)
+![Google Calendar](https://img.shields.io/badge/Google%20Calendar-API-4285F4?logo=googlecalendar&logoColor=white)
+
 ## Funcionalidades
 
 ### Para professores, alunos e usuários externos
