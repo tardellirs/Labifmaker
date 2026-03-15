@@ -27,8 +27,6 @@ pnpm-debug.log*
 # Sistema operacional
 .DS_Store
 Thumbs.db
-AI*.md
-AI_PROJECT_CONTEXT.md
 CLAUDE.md
 
 # Claude Code
