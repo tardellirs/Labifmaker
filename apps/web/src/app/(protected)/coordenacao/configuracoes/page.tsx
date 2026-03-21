@@ -1,15 +1,13 @@
-export const dynamic = "force-dynamic";
-
 import { AccessSettingsManager } from "@/components/coordinator/access-settings-manager";
 import { CoordinatorEmailManager } from "@/components/coordinator/coordinator-email-manager";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getAccessSettings } from "@/lib/auth/access";
-import { getCoordinatorDashboardData } from "@/lib/coordinator/dashboard-data";
+import { getCoordinatorSettingsData } from "@/lib/coordinator/dashboard-data";
 
 export default async function CoordinatorSettingsPage() {
   const [{ coordinatorEmails, notificationRecipients }, accessSettings] = await Promise.all([
-    getCoordinatorDashboardData(),
+    getCoordinatorSettingsData(),
     getAccessSettings()
   ]);
 

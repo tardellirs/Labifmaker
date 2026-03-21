@@ -2,10 +2,10 @@ import { Package } from "lucide-react";
 
 import { EquipmentManager } from "@/components/coordinator/equipment-manager";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { getCoordinatorDashboardData } from "@/lib/coordinator/dashboard-data";
+import { getEquipmentCatalog } from "@/lib/equipment/catalog";
 
 export default async function CoordinatorEquipmentPage() {
-  const { equipmentCatalog } = await getCoordinatorDashboardData();
+  const equipmentCatalog = await getEquipmentCatalog();
 
   return (
     <div className="space-y-6">

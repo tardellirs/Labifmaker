@@ -98,13 +98,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           setError(null);
           if (isNewSignIn) {
-            router.prefetch("/app");
             router.push("/app");
           }
           return;
         }
 
-        await syncSession();
+        void syncSession();
+        setSigningIn(false);
         setError(null);
       } catch (sessionError) {
         console.error(sessionError);
@@ -127,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle: async (institutional = true) => {
       setLoading(true);
       setError(null);
+      router.prefetch("/app");
 
       try {
         const auth = getFirebaseAuth();
@@ -152,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const auth = getFirebaseAuth();
         await firebaseSignOut(auth);
-        await syncSession();
+        void syncSession();
         toast.success("Sessão encerrada.");
         startTransition(() => {
           router.push("/");

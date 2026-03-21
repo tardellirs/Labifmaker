@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { redirect } from "next/navigation";
-
 import { getAccessSettings } from "@/lib/auth/access";
-import { getCurrentSession } from "@/lib/auth/guards";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { LabifLogo } from "@/components/layout/labif-logo";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -19,14 +16,7 @@ function buildLoginHint(allowStudents: boolean, allowExternalUsers: boolean): st
 }
 
 export default async function LoginPage() {
-  const [session, accessSettings] = await Promise.all([
-    getCurrentSession(),
-    getAccessSettings()
-  ]);
-
-  if (session) {
-    redirect("/app");
-  }
+  const accessSettings = await getAccessSettings();
 
   const { allowStudents, allowExternalUsers } = accessSettings;
   const hint = buildLoginHint(allowStudents, allowExternalUsers);

@@ -2,10 +2,10 @@ import { CalendarRange } from "lucide-react";
 
 import { AvailabilityManager } from "@/components/coordinator/availability-manager";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { getCoordinatorDashboardData } from "@/lib/coordinator/dashboard-data";
+import { getCoordinatorAvailabilityData } from "@/lib/coordinator/dashboard-data";
 
 export default async function CoordinatorAvailabilityPage() {
-  const { availabilitySlots } = await getCoordinatorDashboardData();
+  const availabilitySlots = await getCoordinatorAvailabilityData();
 
   return (
     <div className="space-y-6">

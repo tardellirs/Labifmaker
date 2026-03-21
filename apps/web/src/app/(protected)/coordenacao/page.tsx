@@ -72,7 +72,7 @@ export default async function CoordinatorOverviewPage() {
       title: "Notificações",
       description: "Gerencie coordenadores e quem recebe e-mails do sistema.",
       icon: Mail,
-      value: String(metrics.trainedCount).padStart(2, "0")
+      value: String(metrics.notificationRecipientsCount).padStart(2, "0")
     }
   ];
 

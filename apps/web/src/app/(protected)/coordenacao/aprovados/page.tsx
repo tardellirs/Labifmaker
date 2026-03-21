@@ -1,10 +1,11 @@
 import { ApprovedBookingsArchive } from "@/components/coordinator/approved-bookings-archive";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { getCoordinatorDashboardData } from "@/lib/coordinator/dashboard-data";
+import { getApprovedBookings } from "@/lib/coordinator/dashboard-data";
 
 export default async function CoordinatorApprovedPage() {
-  const { bookings, metrics } = await getCoordinatorDashboardData();
+  const bookings = await getApprovedBookings();
+  const approvedCount = bookings.length;
 
   return (
     <div className="space-y-6">
@@ -17,7 +18,7 @@ export default async function CoordinatorApprovedPage() {
           Aqui ficam preservados os agendamentos confirmados no site, com detalhes técnicos,
           comentário da coordenação e link para o Google Calendar quando disponível. Total atual:
           {" "}
-          {metrics.approvedCount}.
+          {approvedCount}.
         </p>
       </Card>
 

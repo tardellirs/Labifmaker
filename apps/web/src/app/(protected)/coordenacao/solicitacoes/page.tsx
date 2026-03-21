@@ -1,10 +1,11 @@
 import { BookingReviewQueue } from "@/components/coordinator/booking-review-queue";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { getCoordinatorDashboardData } from "@/lib/coordinator/dashboard-data";
+import { getPendingBookings } from "@/lib/coordinator/dashboard-data";
 
 export default async function CoordinatorRequestsPage() {
-  const { bookings, metrics } = await getCoordinatorDashboardData();
+  const bookings = await getPendingBookings();
+  const pendingCount = bookings.length;
 
   return (
     <div className="space-y-6">
@@ -15,7 +16,7 @@ export default async function CoordinatorRequestsPage() {
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
           Analise os pedidos pendentes, registre um comentário quando necessário e finalize a
-          decisão sem sair desta página. Hoje há {metrics.pendingCount} pedido(s) aguardando retorno.
+          decisão sem sair desta página. Hoje há {pendingCount} pedido(s) aguardando retorno.
         </p>
       </Card>
 
