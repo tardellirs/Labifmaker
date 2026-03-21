@@ -84,7 +84,7 @@ Labifmaker/
 │           ├── lib/
 │           │   ├── auth/       # Guards, access (cache unificado), session
 │           │   ├── bookings/   # Schema Zod, serializers, formatters
-│           │   ├── coordinator/# Dados do dashboard
+│           │   ├── coordinator/# Funções de busca por pagina (bookings, availability, settings)
 │           │   ├── email/      # Nodemailer e templates
 │           │   ├── equipment/  # Catálogo com ordem customizada
 │           │   ├── firebase/   # SDK client e admin
