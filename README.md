@@ -91,7 +91,6 @@ Labifmaker/
 │           │   ├── google-calendar/ # Integração Calendar API
 │           │   └── utils/      # cn, role-labels
 │           └── types/          # Tipos por domínio (user, equipment, booking, availability)
-├── docs/                       # Documentação complementar
 └──  package.json               # Raiz do monorepo (npm workspaces)
 ```
 
@@ -153,9 +152,15 @@ npm run typecheck  # Verificação de tipos com TypeScript
 
 ## Integração com Google Calendar
 
-A sincronização com o Google Calendar é opcional e funciona via service account. Para configurar, consulte [`docs/google-calendar-setup.md`](docs/google-calendar-setup.md).
+A sincronização é opcional e funciona via service account. Sem as variáveis configuradas, o sistema funciona normalmente.
 
-Sem as credenciais configuradas, o sistema funciona normalmente — apenas não sincroniza com o calendário.
+**Passos:**
+1. No Google Cloud, habilite a `Google Calendar API` e crie uma Service Account.
+2. Gere uma chave JSON para essa conta.
+3. No Google Calendar, crie ou escolha o calendário oficial do LabIF Maker e compartilhe com o e-mail da service account com permissão `Make changes to events`.
+4. Copie o `Calendar ID` e preencha as variáveis de ambiente correspondentes.
+
+A sincronização ocorre em três momentos: criação do pedido (`pendente`), aprovação (`aprovado`) e rejeição (evento removido).
 
 ## Licença
 
