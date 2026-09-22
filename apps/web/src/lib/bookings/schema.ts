@@ -8,7 +8,9 @@ function createTimeStringSchema(fieldLabel: string) {
 
 const baseBookingSchema = z.object({
   equipamentoId: z.string().min(1, "Selecione um equipamento."),
-  disponibilidadeId: z.string().min(1, "Selecione um horario disponivel."),
+  // Opcional: o modelo novo valida contra o horario de funcionamento semanal.
+  // Continua aceito para nao quebrar clientes que ainda enviam o id publicado.
+  disponibilidadeId: z.string().min(1).optional(),
   dataSolicitada: z.string().date(),
   horaInicio: createTimeStringSchema("Hora inicial"),
   horaFim: createTimeStringSchema("Hora final"),

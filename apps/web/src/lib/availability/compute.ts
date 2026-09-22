@@ -31,6 +31,39 @@ export function weekdayOf(isoDate: string) {
   return new Date(year, month - 1, day).getDay();
 }
 
+/** Data local (nunca UTC) para "YYYY-MM-DD". */
+export function toIsoDate(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** Soma dias sem passar por UTC; o construtor local acerta virada de mes e horario de verao. */
+export function addDays(isoDate: string, days: number) {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return toIsoDate(new Date(year, month - 1, day + days));
+}
+
+/** Segunda-feira da semana da data informada. */
+export function startOfWeek(isoDate: string) {
+  const weekday = weekdayOf(isoDate);
+  return addDays(isoDate, weekday === 0 ? -6 : 1 - weekday);
+}
+
+/** Fuso do laboratorio. O servidor roda em UTC, entao a data local dele nao serve. */
+export const LAB_TIME_ZONE = "America/Sao_Paulo";
+
+/**
+ * Hoje no fuso do laboratorio.
+ *
+ * Usar a data local quebraria no servidor: a partir das 21h no Brasil, UTC ja
+ * esta no dia seguinte, e um agendamento para hoje seria recusado como passado.
+ * Cliente e servidor calculam o mesmo dia usando o fuso explicito.
+ */
+export function todayIso(timeZone: string = LAB_TIME_ZONE) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
+}
+
 /** Intervalos se sobrepoem? Fim e exclusivo, entao 08:00-09:00 e 09:00-10:00 nao colidem. */
 export function overlaps(left: TimeRange, right: TimeRange) {
   return toMinutes(left.inicio) < toMinutes(right.fim)

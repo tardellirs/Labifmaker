@@ -1,7 +1,7 @@
 import { CalendarClock, ChevronDown, FileStack, Wrench } from "lucide-react";
 
 import { requireAuthenticatedUser } from "@/lib/auth/guards";
-import { toAvailabilitySlot, toBooking } from "@/lib/bookings/serializers";
+import { toBooking } from "@/lib/bookings/serializers";
 import { formatDate, formatDetailLabel, formatDetailValue } from "@/lib/bookings/formatters";
 import { getEquipmentCatalog } from "@/lib/equipment/catalog";
 import { getAdminDb } from "@/lib/firebase/admin";
@@ -39,21 +39,16 @@ function getTrainingStatusByEquipment(session: Awaited<ReturnType<typeof require
 export default async function ProfessorDashboardPage() {
   // start uid-independent fetches immediately, don't wait for session
   const equipmentPromise = getEquipmentCatalog();
-  const availabilityPromise = getAdminDb().collection("disponibilidades").where("ativo", "==", true).get();
 
   const session = await requireAuthenticatedUser();
 
-  const [equipmentCatalog, availabilitySnapshot, bookingsSnapshot] = await Promise.all([
+  const [equipmentCatalog, bookingsSnapshot] = await Promise.all([
     equipmentPromise,
-    availabilityPromise,
     getAdminDb()
       .collection("agendamentos")
       .where("solicitanteUid", "==", session.uid)
       .get()
   ]);
-  const availabilitySlots = availabilitySnapshot.docs.map((doc) =>
-    toAvailabilitySlot(doc.id, doc.data())
-  );
   const bookings = bookingsSnapshot.docs
     .map((doc) => toBooking(doc.id, doc.data()))
     .sort((left, right) => (right.createdAt?.getTime() ?? 0) - (left.createdAt?.getTime() ?? 0));
@@ -107,7 +102,6 @@ export default async function ProfessorDashboardPage() {
       </section>
 
       <BookingRequestForm
-        availabilitySlots={availabilitySlots}
         equipmentCatalog={equipmentCatalog}
         trainingStatus={trainingStatus}
       />
