@@ -1,5 +1,6 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 
 import { getNotificationRecipientEmails } from "@/lib/auth/access";
 import { getCurrentSession } from "@/lib/auth/guards";
@@ -51,13 +52,6 @@ export async function POST(request: Request) {
     if (payload.dataSolicitada < todayIso()) {
       return NextResponse.json(
         { error: "Nao e possivel agendar em uma data que ja passou." },
-        { status: 409 }
-      );
-    }
-
-    if (payload.horaInicio >= payload.horaFim) {
-      return NextResponse.json(
-        { error: "A hora final deve ser maior que a hora inicial." },
         { status: 409 }
       );
     }
@@ -228,6 +222,16 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error(error);
+
+    // Sem isto, um campo curto demais (a descricao exige 10 caracteres) chega
+    // ao professor como "Falha ao criar o agendamento", sem dizer o que ajustar.
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: error.issues[0]?.message ?? "Verifique os dados informados." },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json({ error: "Falha ao criar o agendamento." }, { status: 400 });
   }
 }
