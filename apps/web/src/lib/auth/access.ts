@@ -4,7 +4,14 @@ import { FieldValue } from "firebase-admin/firestore";
 
 import { getAdminDb } from "@/lib/firebase/admin";
 
-const DEFAULT_COORDINATOR_EMAILS = ["stekel@ifsp.edu.br"];
+/**
+ * Coordenadores embutidos no codigo.
+ *
+ * Vazio de proposito: o e-mail de uma pessoa nao deve viver no fonte, e quem
+ * esta aqui nao pode ser removido pela tela (ver removeCoordinatorEmail). O
+ * bootstrap fica em COORDINATOR_EMAILS, que e configuracao e nao codigo.
+ */
+const DEFAULT_COORDINATOR_EMAILS: string[] = [];
 const SETTINGS_COLLECTION = "configuracoes";
 const SETTINGS_DOC = "acesso";
 
