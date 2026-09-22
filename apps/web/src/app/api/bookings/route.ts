@@ -5,7 +5,7 @@ import { getNotificationRecipientEmails } from "@/lib/auth/access";
 import { getCurrentSession } from "@/lib/auth/guards";
 import { formatBookingDetails } from "@/lib/bookings/serializers";
 import { createBookingSchema } from "@/lib/bookings/schema";
-import { buildDaySlots, overlaps, rangesForDate } from "@/lib/availability/compute";
+import { buildDaySlots, overlaps, rangesForDate, todayIso } from "@/lib/availability/compute";
 import { getAvailabilityExceptions, getOperatingHours } from "@/lib/availability/store";
 import { getEquipmentCatalog } from "@/lib/equipment/catalog";
 import { renderCoordinatorNewBookingEmail } from "@/lib/email/templates";
@@ -47,6 +47,14 @@ export async function POST(request: Request) {
     const db = getAdminDb();
     const bookingRef = db.collection("agendamentos").doc();
 
+    // Data passada: a grade ja esconde, mas a API e o portao de verdade.
+    if (payload.dataSolicitada < todayIso()) {
+      return NextResponse.json(
+        { error: "Nao e possivel agendar em uma data que ja passou." },
+        { status: 409 }
+      );
+    }
+
     if (payload.horaInicio >= payload.horaFim) {
       return NextResponse.json(
         { error: "A hora final deve ser maior que a hora inicial." },
@@ -54,67 +62,32 @@ export async function POST(request: Request) {
       );
     }
 
-    if (payload.disponibilidadeId) {
-      // Caminho legado: o cliente escolheu uma janela publicada data a data.
-      const availabilitySnapshot = await db
-        .collection("disponibilidades")
-        .doc(payload.disponibilidadeId)
-        .get();
+    // Modelo novo: valida contra a regra semanal e as excecoes do dia.
+    const [operatingHours, exceptions] = await Promise.all([
+      getOperatingHours(),
+      getAvailabilityExceptions(payload.dataSolicitada)
+    ]);
 
-      if (!availabilitySnapshot.exists) {
-        return NextResponse.json({ error: "Horario disponivel nao encontrado." }, { status: 404 });
-      }
+    const ranges = rangesForDate(operatingHours.semana, exceptions, payload.dataSolicitada);
 
-      const availability = availabilitySnapshot.data();
-
-      if (
-        !availability ||
-        availability.ativo === false ||
-        availability.data !== payload.dataSolicitada
-      ) {
-        return NextResponse.json(
-          { error: "O horario selecionado nao esta mais disponivel." },
-          { status: 409 }
-        );
-      }
-
-      if (
-        payload.horaInicio < availability.horaInicio ||
-        payload.horaFim > availability.horaFim
-      ) {
-        return NextResponse.json(
-          { error: "O horario solicitado deve estar contido dentro da disponibilidade publicada." },
-          { status: 409 }
-        );
-      }
-    } else {
-      // Modelo novo: valida contra a regra semanal e as excecoes do dia.
-      const [operatingHours, exceptions] = await Promise.all([
-        getOperatingHours(),
-        getAvailabilityExceptions(payload.dataSolicitada)
-      ]);
-
-      const ranges = rangesForDate(operatingHours.semana, exceptions, payload.dataSolicitada);
-
-      if (ranges.length === 0) {
-        return NextResponse.json(
-          { error: "O laboratorio nao atende nesta data." },
-          { status: 409 }
-        );
-      }
-
-      // O pedido precisa cair exatamente num dos blocos oferecidos, senao um
-      // cliente adulterado poderia gravar qualquer intervalo dentro da faixa.
-      const blocoValido = buildDaySlots(ranges, []).some(
-        (slot) => slot.inicio === payload.horaInicio && slot.fim === payload.horaFim
+    if (ranges.length === 0) {
+      return NextResponse.json(
+        { error: "O laboratorio nao atende nesta data." },
+        { status: 409 }
       );
+    }
 
-      if (!blocoValido) {
-        return NextResponse.json(
-          { error: "O horario solicitado esta fora do funcionamento do laboratorio." },
-          { status: 409 }
-        );
-      }
+    // O pedido precisa cair exatamente num dos blocos oferecidos, senao um
+    // cliente adulterado poderia gravar qualquer intervalo dentro da faixa.
+    const blocoValido = buildDaySlots(ranges, []).some(
+      (slot) => slot.inicio === payload.horaInicio && slot.fim === payload.horaFim
+    );
+
+    if (!blocoValido) {
+      return NextResponse.json(
+        { error: "O horario solicitado esta fora do funcionamento do laboratorio." },
+        { status: 409 }
+      );
     }
 
     // Conflito com reserva ja aprovada do mesmo equipamento.
@@ -158,7 +131,6 @@ export async function POST(request: Request) {
       solicitanteUid: session.uid,
       solicitanteNome: session.nome,
       solicitanteEmail: session.email,
-      disponibilidadeId: payload.disponibilidadeId,
       equipamentoId: equipment.id,
       equipamentoNome: equipment.nome,
       equipamentoTipo: equipment.tipo,
@@ -182,7 +154,6 @@ export async function POST(request: Request) {
         solicitanteUid: session.uid,
         solicitanteNome: session.nome,
         solicitanteEmail: session.email,
-        disponibilidadeId: payload.disponibilidadeId,
         equipamentoId: equipment.id,
         equipamentoNome: equipment.nome,
         equipamentoTipo: equipment.tipo,

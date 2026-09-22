@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase-admin/firestore";
 
-import type { AvailabilitySlot, Booking } from "@/types";
+import type { Booking } from "@/types";
 
 function castDate(value: unknown) {
   return value instanceof Timestamp ? value.toDate() : undefined;
@@ -58,19 +58,3 @@ export function formatBookingDetails(details: Booking["detalhesTecnicos"]) {
     .join("<br />");
 }
 
-export function toAvailabilitySlot(
-  id: string,
-  data: Record<string, unknown> | undefined
-): AvailabilitySlot {
-  return {
-    id,
-    data: String(data?.data ?? ""),
-    horaInicio: String(data?.horaInicio ?? ""),
-    horaFim: String(data?.horaFim ?? ""),
-    ativo: data?.ativo !== false,
-    criadoPorUid: String(data?.criadoPorUid ?? ""),
-    criadoPorNome: String(data?.criadoPorNome ?? ""),
-    createdAt: castDate(data?.createdAt),
-    updatedAt: castDate(data?.updatedAt)
-  };
-}

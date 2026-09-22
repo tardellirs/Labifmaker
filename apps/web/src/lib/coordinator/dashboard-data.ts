@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getCoordinatorEmails, getNotificationRecipientEmails } from "@/lib/auth/access";
-import { toAvailabilitySlot, toBooking } from "@/lib/bookings/serializers";
+import { toBooking } from "@/lib/bookings/serializers";
 import { getEquipmentCatalog } from "@/lib/equipment/catalog";
 import { getAdminDb } from "@/lib/firebase/admin";
 
@@ -50,21 +50,6 @@ export async function getApprovedBookings() {
     .sort((left, right) => (right.createdAt?.getTime() ?? 0) - (left.createdAt?.getTime() ?? 0));
 }
 
-export async function getCoordinatorAvailabilityData() {
-  const availabilitySnapshot = await getAdminDb().collection("disponibilidades").get();
-
-  return availabilitySnapshot.docs
-    .map((doc) => toAvailabilitySlot(doc.id, doc.data()))
-    .sort((left, right) => {
-      const dateCompare = left.data.localeCompare(right.data);
-      if (dateCompare !== 0) {
-        return dateCompare;
-      }
-
-      return left.horaInicio.localeCompare(right.horaInicio);
-    });
-}
-
 export async function getCoordinatorSettingsData() {
   const [coordinatorEmails, notificationRecipients] = await Promise.all([
     getCoordinatorEmails(),
@@ -77,14 +62,8 @@ export async function getCoordinatorSettingsData() {
 // ─── Facade: used only by the overview page ─────────────────────────────────
 
 export async function getCoordinatorDashboardData() {
-  const [
-    equipmentCatalog,
-    availabilitySlots,
-    bookingsData,
-    settingsData
-  ] = await Promise.all([
+  const [equipmentCatalog, bookingsData, settingsData] = await Promise.all([
     getEquipmentCatalog(),
-    getCoordinatorAvailabilityData(),
     getCoordinatorBookingsData(),
     getCoordinatorSettingsData()
   ]);
@@ -93,7 +72,6 @@ export async function getCoordinatorDashboardData() {
 
   return {
     equipmentCatalog,
-    availabilitySlots,
     bookings: bookingsData.bookings,
     coordinatorEmails: settingsData.coordinatorEmails,
     notificationRecipients: settingsData.notificationRecipients,

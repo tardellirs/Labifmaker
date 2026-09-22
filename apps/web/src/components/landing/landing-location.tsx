@@ -55,7 +55,7 @@ export function LandingLocation() {
                 <div>
                   <CardTitle>Atendimento</CardTitle>
                   <CardDescription className="mt-1">
-                    As disponibilidades de horários são publicadas pela coordenação dentro do sistema.
+                    Consulte os horários livres no calendário do portal e solicite o seu. A coordenação avalia cada pedido.
                   </CardDescription>
                 </div>
               </div>

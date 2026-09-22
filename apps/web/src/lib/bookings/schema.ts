@@ -8,9 +8,6 @@ function createTimeStringSchema(fieldLabel: string) {
 
 const baseBookingSchema = z.object({
   equipamentoId: z.string().min(1, "Selecione um equipamento."),
-  // Opcional: o modelo novo valida contra o horario de funcionamento semanal.
-  // Continua aceito para nao quebrar clientes que ainda enviam o id publicado.
-  disponibilidadeId: z.string().min(1).optional(),
   dataSolicitada: z.string().date(),
   horaInicio: createTimeStringSchema("Hora inicial"),
   horaFim: createTimeStringSchema("Hora final"),
@@ -18,22 +15,6 @@ const baseBookingSchema = z.object({
   descricao: z.string().min(10, "Descreva brevemente a atividade."),
   sabeOperarEquipamento: z.boolean(),
   concordaTermos: z.literal(true)
-});
-
-export const createAvailabilitySchema = z
-  .object({
-    data: z.string().date(),
-    horaInicio: createTimeStringSchema("Hora inicial"),
-    horaFim: createTimeStringSchema("Hora final")
-  })
-  .refine((data) => data.horaInicio < data.horaFim, {
-    message: "A hora final deve ser maior que a hora inicial.",
-    path: ["horaFim"]
-  });
-
-export const updateAvailabilitySchema = z.object({
-  availabilityId: z.string().min(1),
-  ativo: z.boolean()
 });
 
 export const updateEquipmentStatusSchema = z.object({
@@ -60,4 +41,3 @@ export const createBookingSchema = baseBookingSchema.refine((data) => data.horaI
 });
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
-export type CreateAvailabilityInput = z.infer<typeof createAvailabilitySchema>;
