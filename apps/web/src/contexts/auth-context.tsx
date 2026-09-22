@@ -98,7 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           setError(null);
           if (isNewSignIn) {
-            router.push("/app");
+            // navegacao dura de proposito: o cache do router pode guardar o
+            // redirect que o middleware devolveu enquanto ainda nao havia
+            // cookie de sessao, e um router.push replicaria esse redirect
+            window.location.assign("/app");
           }
           return;
         }
@@ -127,7 +130,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle: async (institutional = true) => {
       setLoading(true);
       setError(null);
-      router.prefetch("/app");
 
       try {
         const auth = getFirebaseAuth();
