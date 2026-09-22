@@ -1,7 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 
-import { requireCoordinator } from "@/lib/auth/guards";
+import { getCurrentSession } from "@/lib/auth/guards";
 import {
   createEquipmentSchema,
   deleteEquipmentSchema,
@@ -19,10 +19,22 @@ function slugifyEquipmentName(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-export async function POST(request: Request) {
-  const session = await requireCoordinator();
+/**
+ * Guarda para Route Handler.
+ *
+ * requireCoordinator() de lib/auth/guards nao serve aqui: ela chama redirect(),
+ * que e guarda de pagina, e faz o handler responder 307 para /app em vez de 403
+ * JSON - o cliente recebe HTML onde espera JSON e quebra com erro confuso.
+ */
+async function ensureCoordinator() {
+  const session = await getCurrentSession();
+  return session && session.papel === "coordenador" ? session : null;
+}
 
-  if (session.papel !== "coordenador") {
+export async function POST(request: Request) {
+  const session = await ensureCoordinator();
+
+  if (!session) {
     return NextResponse.json({ error: "Acesso restrito a coordenadores." }, { status: 403 });
   }
 
@@ -70,9 +82,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const session = await requireCoordinator();
+  const session = await ensureCoordinator();
 
-  if (session.papel !== "coordenador") {
+  if (!session) {
     return NextResponse.json({ error: "Acesso restrito a coordenadores." }, { status: 403 });
   }
 
@@ -98,9 +110,9 @@ export async function PATCH(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const session = await requireCoordinator();
+  const session = await ensureCoordinator();
 
-  if (session.papel !== "coordenador") {
+  if (!session) {
     return NextResponse.json({ error: "Acesso restrito a coordenadores." }, { status: 403 });
   }
 
@@ -123,9 +135,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const session = await requireCoordinator();
+  const session = await ensureCoordinator();
 
-  if (session.papel !== "coordenador") {
+  if (!session) {
     return NextResponse.json({ error: "Acesso restrito a coordenadores." }, { status: 403 });
   }
 

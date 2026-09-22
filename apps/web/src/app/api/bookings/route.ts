@@ -5,6 +5,7 @@ import { getNotificationRecipientEmails } from "@/lib/auth/access";
 import { getCurrentSession } from "@/lib/auth/guards";
 import { formatBookingDetails } from "@/lib/bookings/serializers";
 import { createBookingSchema } from "@/lib/bookings/schema";
+import { overlaps } from "@/lib/availability/compute";
 import { getEquipmentCatalog } from "@/lib/equipment/catalog";
 import { renderCoordinatorNewBookingEmail } from "@/lib/email/templates";
 import { sendTransactionalEmail } from "@/lib/email/sender";
@@ -71,6 +72,41 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { error: "O horario solicitado deve estar contido dentro da disponibilidade publicada." },
+        { status: 409 }
+      );
+    }
+
+    // Conflito com reserva ja aprovada do mesmo equipamento.
+    //
+    // Filtra apenas por dataSolicitada e cruza o resto em memoria de proposito:
+    // combinar varios campos na consulta exigiria indice composto no Firestore,
+    // e um dia tem poucos agendamentos. Pendente nao bloqueia - toda
+    // solicitacao passa por aprovacao manual, entao um pedido esquecido na fila
+    // congelaria o horario para todos; a coordenacao ve os pedidos concorrentes
+    // e decide.
+    const sameDaySnapshot = await db
+      .collection("agendamentos")
+      .where("dataSolicitada", "==", payload.dataSolicitada)
+      .get();
+
+    const conflito = sameDaySnapshot.docs.some((doc) => {
+      const existing = doc.data();
+
+      return (
+        existing.equipamentoId === equipment.id &&
+        existing.status === "aprovado" &&
+        typeof existing.horaInicio === "string" &&
+        typeof existing.horaFim === "string" &&
+        overlaps(
+          { inicio: payload.horaInicio, fim: payload.horaFim },
+          { inicio: existing.horaInicio, fim: existing.horaFim }
+        )
+      );
+    });
+
+    if (conflito) {
+      return NextResponse.json(
+        { error: "Ja existe um agendamento aprovado para este equipamento neste horario." },
         { status: 409 }
       );
     }
