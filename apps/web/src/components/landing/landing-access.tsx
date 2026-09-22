@@ -65,7 +65,7 @@ export function LandingAccess({ allowStudents, allowExternalUsers }: LandingAcce
           </div>
 
           <div className="mt-6 rounded-2xl bg-slate-50 p-4">
-            <GoogleSignInButton institutional={!allowExternalUsers} />
+            <GoogleSignInButton />
             <p className="mt-4 text-xs leading-5 text-slate-500">{hint}</p>
           </div>
 

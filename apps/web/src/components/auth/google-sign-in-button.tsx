@@ -5,11 +5,7 @@ import { Chrome, LoaderCircle } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 
-interface GoogleSignInButtonProps {
-  institutional?: boolean;
-}
-
-export function GoogleSignInButton({ institutional = true }: GoogleSignInButtonProps) {
+export function GoogleSignInButton() {
   const { signInWithGoogle, loading, signingIn } = useAuth();
 
   if (signingIn) {
@@ -26,11 +22,11 @@ export function GoogleSignInButton({ institutional = true }: GoogleSignInButtonP
     <Button
       className="w-full"
       disabled={loading}
-      onClick={() => void signInWithGoogle(institutional)}
+      onClick={() => void signInWithGoogle()}
       size="lg"
     >
       {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Chrome className="h-4 w-4" />}
-      {institutional ? "Entrar com o Google institucional" : "Entrar com o Google"}
+      Entrar com o Google
     </Button>
   );
 }

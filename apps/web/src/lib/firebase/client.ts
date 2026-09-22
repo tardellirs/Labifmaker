@@ -67,13 +67,17 @@ export function getFirebaseDb() {
 
 /**
  * Creates a fresh GoogleAuthProvider.
- * institutional=true → restringe o seletor à contas @ifsp.edu.br (login padrão)
- * institutional=false → permite qualquer conta Google (usuário externo habilitado)
+ *
+ * Sem o parametro `hd`, de proposito. `hd` filtra o seletor de contas do Google
+ * e nao autoriza nada: quem decide quem entra e isAllowedLoginEmail() no
+ * servidor. Fixar hd:"ifsp.edu.br" impedia um coordenador de dominio externo
+ * (ex.: @gmail.com) de ate mesmo selecionar a propria conta, apesar de a lista
+ * de coordenadores valer para qualquer dominio. Conta nao autorizada que chegue
+ * a autenticar e recusada e deslogada no retorno, com mensagem.
  */
-export function getGoogleAuthProvider(institutional = true) {
+export function getGoogleAuthProvider() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({
-    ...(institutional ? { hd: "ifsp.edu.br" } : {}),
     prompt: "select_account"
   });
   provider.addScope("email");

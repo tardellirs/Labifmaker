@@ -15,6 +15,11 @@ function buildLoginHint(allowStudents: boolean, allowExternalUsers: boolean): st
   return "Lembre-se: é necessário usar seu e-mail @ifsp.edu.br ou um e-mail com permissão da coordenação.";
 }
 
+// Sem isto o Next prerenderiza /login no build e congela accessSettings no
+// HTML estatico: alternar "permitir alunos/externos" nunca chegava na tela,
+// nem apos salvar, porque a pagina so mudaria num novo deploy.
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
   const accessSettings = await getAccessSettings();
 
@@ -42,7 +47,7 @@ export default async function LoginPage() {
         </CardDescription>
 
         <div className="mt-6 rounded-[20px] bg-slate-50 p-4">
-          <GoogleSignInButton institutional={!allowExternalUsers} />
+          <GoogleSignInButton />
           <p className="mt-4 text-xs leading-5 text-slate-500">{hint}</p>
         </div>
       </Card>

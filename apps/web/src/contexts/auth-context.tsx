@@ -24,7 +24,7 @@ interface AuthContextValue {
   loading: boolean;
   signingIn: boolean;
   error: string | null;
-  signInWithGoogle: (institutional?: boolean) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -127,13 +127,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signingIn,
     error,
-    signInWithGoogle: async (institutional = true) => {
+    signInWithGoogle: async () => {
       setLoading(true);
       setError(null);
 
       try {
         const auth = getFirebaseAuth();
-        const provider = getGoogleAuthProvider(institutional);
+        const provider = getGoogleAuthProvider();
         await signInWithPopup(auth, provider);
         // don't setLoading(false) here — onIdTokenChanged will fire next
         // and we want the spinner to stay visible throughout the whole flow
