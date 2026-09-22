@@ -45,8 +45,8 @@ function normalizeEmailList(value: unknown) {
 }
 
 // ─── Core: single Firestore read, cached ─────────────────────────────────────
-async function loadAccessDoc(): Promise<AccessDoc> {
-  if (cachedDoc && Date.now() - cachedAt < CACHE_TTL_MS) {
+async function loadAccessDoc(options?: { fresh?: boolean }): Promise<AccessDoc> {
+  if (!options?.fresh && cachedDoc && Date.now() - cachedAt < CACHE_TTL_MS) {
     return cachedDoc;
   }
 
@@ -141,23 +141,35 @@ export async function setAccessSettings(settings: Partial<AccessSettings>) {
 export async function isAllowedLoginEmail(email?: string | null) {
   if (!email) return false;
 
-  const { accessSettings } = await loadAccessDoc();
+  // Leitura sem cache de proposito. O cache de 60s vive na memoria de UMA
+  // instancia serverless, entao invalidateAccessCache() nao alcanca as demais:
+  // um coordenador recem-adicionado poderia ficar ate 1 minuto sem conseguir
+  // entrar, dependendo de qual instancia atendesse o login. Login e raro e e o
+  // ponto onde errar custa caro, entao aqui vale pagar 1 leitura do Firestore.
+  // A leitura repopula o cache, entao as requisicoes seguintes seguem baratas.
+  const { accessSettings, coordinatorEmails } = await loadAccessDoc({ fresh: true });
 
   if (accessSettings.allowExternalUsers) return true;
   if (isPrimaryIfspEmail(email)) return true;
   if (accessSettings.allowStudents && isStudentEmail(email)) return true;
 
-  return isCoordinatorEmail(email);
+  // usa a lista ja lida acima; isCoordinatorEmail() voltaria a passar pelo cache
+  return coordinatorEmails.includes(normalizeEmail(email));
 }
 
 // ─── Coordinator CRUD ─────────────────────────────────────────────────────────
 export async function addCoordinatorEmail(email: string) {
   const normalized = normalizeEmail(email);
 
-  const nextEmails = [...new Set([...(await getCoordinatorEmails()), normalized])].sort(
+  // Sem cache: isto e um read-modify-write. Partir de um cache velho desta
+  // instancia gravaria uma lista sem o que outra instancia acabou de incluir,
+  // apagando o coordenador dela.
+  const current = await loadAccessDoc({ fresh: true });
+
+  const nextEmails = [...new Set([...current.coordinatorEmails, normalized])].sort(
     (a, b) => a.localeCompare(b)
   );
-  const nextRecipients = [...new Set([...(await getNotificationRecipientEmails()), normalized])].sort(
+  const nextRecipients = [...new Set([...current.notificationRecipientEmails, normalized])].sort(
     (a, b) => a.localeCompare(b)
   );
 
@@ -179,10 +191,14 @@ export async function addCoordinatorEmail(email: string) {
 
 export async function removeCoordinatorEmail(email: string) {
   const normalized = normalizeEmail(email);
-  const nextEmails = (await getCoordinatorEmails()).filter(
+
+  // sem cache pelo mesmo motivo de addCoordinatorEmail
+  const current = await loadAccessDoc({ fresh: true });
+
+  const nextEmails = current.coordinatorEmails.filter(
     (e) => e !== normalized || DEFAULT_COORDINATOR_EMAILS.includes(e)
   );
-  const nextRecipients = (await getNotificationRecipientEmails()).filter(
+  const nextRecipients = current.notificationRecipientEmails.filter(
     (e) => e !== normalized || nextEmails.includes(e)
   );
 
@@ -211,7 +227,8 @@ export async function setNotificationRecipientEmails(emails: string[]) {
     throw new Error("Selecione pelo menos um coordenador para receber os avisos.");
   }
 
-  const coordinatorEmails = await getCoordinatorEmails();
+  // sem cache: valida contra a lista real, nao contra uma copia de ate 60s atras
+  const { coordinatorEmails } = await loadAccessDoc({ fresh: true });
   const invalidEmails = normalizedEmails.filter((e) => !coordinatorEmails.includes(e));
 
   if (invalidEmails.length > 0) {

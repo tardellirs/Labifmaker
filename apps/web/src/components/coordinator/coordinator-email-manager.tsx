@@ -24,6 +24,13 @@ interface CoordinatorEmailManagerProps {
   notificationRecipients: string[];
 }
 
+/** A rota /api/coordinator-emails ja devolve as listas atualizadas. */
+interface CoordinatorEmailsResponse {
+  error?: string;
+  emails?: string[];
+  notificationRecipients?: string[];
+}
+
 export function CoordinatorEmailManager({
   emails,
   notificationRecipients
@@ -35,10 +42,29 @@ export function CoordinatorEmailManager({
   const [confirmEmail, setConfirmEmail] = useState<string | null>(null);
   const [savingRecipients, setSavingRecipients] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState(notificationRecipients);
+  const [coordinatorEmails, setCoordinatorEmails] = useState(emails);
 
   useEffect(() => {
     setSelectedRecipients(notificationRecipients);
   }, [notificationRecipients]);
+
+  useEffect(() => {
+    setCoordinatorEmails(emails);
+  }, [emails]);
+
+  // As listas vem na resposta da propria escrita. Usa-las aqui deixa a tela
+  // correta imediatamente: o router.refresh() abaixo pode ser servido por outra
+  // instancia serverless, cujo cache de 60s em lib/auth/access.ts ainda esta
+  // velho porque invalidateAccessCache() so limpa a instancia que gravou.
+  function applyServerLists(result: CoordinatorEmailsResponse) {
+    if (result.emails) {
+      setCoordinatorEmails(result.emails);
+    }
+
+    if (result.notificationRecipients) {
+      setSelectedRecipients(result.notificationRecipients);
+    }
+  }
 
   async function handleAdd(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,7 +76,7 @@ export function CoordinatorEmailManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })
       });
-      const result = (await response.json()) as { error?: string };
+      const result = (await response.json()) as CoordinatorEmailsResponse;
 
       if (!response.ok) {
         throw new Error(result.error ?? "Falha ao adicionar coordenador.");
@@ -59,9 +85,13 @@ export function CoordinatorEmailManager({
       const normalizedEmail = email.trim().toLowerCase();
       toast.success("E-mail de coordenador adicionado.");
       setEmail("");
+      setCoordinatorEmails((current) =>
+        current.includes(normalizedEmail) ? current : [...current, normalizedEmail]
+      );
       setSelectedRecipients((current) =>
         current.includes(normalizedEmail) ? current : [...current, normalizedEmail]
       );
+      applyServerLists(result);
       startTransition(() => {
         router.refresh();
       });
@@ -83,16 +113,21 @@ export function CoordinatorEmailManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: currentEmail })
       });
-      const result = (await response.json()) as { error?: string };
+      const result = (await response.json()) as CoordinatorEmailsResponse;
 
       if (!response.ok) {
         throw new Error(result.error ?? "Falha ao remover coordenador.");
       }
 
       toast.success("E-mail de coordenador removido.");
+      setCoordinatorEmails((current) =>
+        current.filter((emailAddress) => emailAddress !== currentEmail)
+      );
       setSelectedRecipients((current) =>
         current.filter((emailAddress) => emailAddress !== currentEmail)
       );
+      // o servidor mantem os coordenadores padrao, entao ele e a autoridade
+      applyServerLists(result);
       startTransition(() => {
         router.refresh();
       });
@@ -113,13 +148,14 @@ export function CoordinatorEmailManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emails: selectedRecipients })
       });
-      const result = (await response.json()) as { error?: string };
+      const result = (await response.json()) as CoordinatorEmailsResponse;
 
       if (!response.ok) {
         throw new Error(result.error ?? "Falha ao atualizar destinatarios.");
       }
 
       toast.success("Destinatários de notificação atualizados.");
+      applyServerLists(result);
       startTransition(() => {
         router.refresh();
       });
@@ -200,7 +236,7 @@ export function CoordinatorEmailManager({
         </form>
 
         <div className="mt-6 space-y-3">
-          {emails.map((currentEmail) => (
+          {coordinatorEmails.map((currentEmail) => (
             <div
               className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3"
               key={currentEmail}
@@ -230,7 +266,7 @@ export function CoordinatorEmailManager({
           </p>
 
           <div className="mt-4 space-y-3">
-            {emails.map((currentEmail) => (
+            {coordinatorEmails.map((currentEmail) => (
               <label
                 className="flex items-center justify-between gap-3 rounded-[18px] border border-white bg-white px-4 py-3 text-sm text-slate-700"
                 key={`${currentEmail}-recipient`}
