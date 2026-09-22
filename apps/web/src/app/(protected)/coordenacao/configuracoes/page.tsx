@@ -2,14 +2,13 @@ import { AccessSettingsManager } from "@/components/coordinator/access-settings-
 import { CoordinatorEmailManager } from "@/components/coordinator/coordinator-email-manager";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { getAccessSettings } from "@/lib/auth/access";
-import { getCoordinatorSettingsData } from "@/lib/coordinator/dashboard-data";
+import { getAccessSnapshot } from "@/lib/auth/access";
 
 export default async function CoordinatorSettingsPage() {
-  const [{ coordinatorEmails, notificationRecipients }, accessSettings] = await Promise.all([
-    getCoordinatorSettingsData(),
-    getAccessSettings()
-  ]);
+  // leitura sem cache: esta tela edita esses dados e precisa refletir a escrita
+  // imediatamente, inclusive no router.refresh() disparado pelos formularios
+  const { coordinatorEmails, notificationRecipients, accessSettings } =
+    await getAccessSnapshot();
 
   return (
     <div className="space-y-6">

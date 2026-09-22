@@ -129,6 +129,25 @@ export async function getAccessSettings(): Promise<AccessSettings> {
   return (await loadAccessDoc()).accessSettings;
 }
 
+/**
+ * Tudo que a tela de configuracoes mostra, numa unica leitura sem cache.
+ *
+ * Essa tela nao so exibe esses dados: ela os edita. Servi-la pelo cache de 60s
+ * faz a lista voltar ao estado antigo logo depois de uma escrita, porque o
+ * cache e uma variavel de modulo de UMA instancia serverless e
+ * invalidateAccessCache() nao alcanca as demais. E uma leitura do Firestore
+ * numa pagina de administracao, nao no caminho quente.
+ */
+export async function getAccessSnapshot() {
+  const doc = await loadAccessDoc({ fresh: true });
+
+  return {
+    coordinatorEmails: doc.coordinatorEmails,
+    notificationRecipients: doc.notificationRecipientEmails,
+    accessSettings: doc.accessSettings
+  };
+}
+
 export async function setAccessSettings(settings: Partial<AccessSettings>) {
   await getAdminDb()
     .collection(SETTINGS_COLLECTION)
