@@ -10,16 +10,18 @@ export const SESSION_COOKIE_NAME =
 export const SESSION_EXPIRES_IN =
   Number(process.env.SESSION_EXPIRES_IN_DAYS ?? 5) * 24 * 60 * 60 * 1000;
 
+/**
+ * `firestoreRole` e aceito por compatibilidade de chamada, mas ignorado.
+ * Considera-lo tornaria o papel permanente: ele e gravado a partir do proprio
+ * resultado desta funcao, entao se realimentaria a cada login e a remocao da
+ * lista de coordenadores nunca revogaria o acesso.
+ */
 export async function resolveUserRole(
   email?: string | null,
   claimsRole?: string | null,
-  firestoreRole?: string | null
+  _firestoreRole?: string | null
 ): Promise<UserRole> {
-  if (
-    (await isCoordinatorEmail(email)) ||
-    claimsRole === "coordenador" ||
-    firestoreRole === "coordenador"
-  ) {
+  if ((await isCoordinatorEmail(email)) || claimsRole === "coordenador") {
     return "coordenador";
   }
 

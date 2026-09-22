@@ -27,10 +27,14 @@ export const getCurrentSession = cache(async (): Promise<AuthenticatedSession | 
 
     // role is derived from the email domain so it stays correct regardless
     // of what was previously stored in the Firestore user document
+    // O papel guardado no documento do usuario NAO entra aqui.
+    //
+    // Ele e escrito a cada login a partir do papel vigente, entao le-lo de
+    // volta o tornava permanente: quem virasse coordenador uma vez continuaria
+    // coordenador para sempre, e tirar o e-mail da lista nao revogava nada.
+    // A lista de coordenadores e a unica fonte de verdade.
     const papel: UserRole =
-      isCoordinator ||
-      decodedToken.role === "coordenador" ||
-      profile?.papel === "coordenador"
+      isCoordinator || decodedToken.role === "coordenador"
         ? "coordenador"
         : isStudentEmail(decodedToken.email)
           ? "aluno"
