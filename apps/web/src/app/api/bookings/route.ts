@@ -6,7 +6,7 @@ import { getNotificationRecipientEmails } from "@/lib/auth/access";
 import { getCurrentSession } from "@/lib/auth/guards";
 import { formatBookingDetails } from "@/lib/bookings/serializers";
 import { createBookingSchema } from "@/lib/bookings/schema";
-import { buildDaySlots, overlaps, rangesForDate, todayIso } from "@/lib/availability/compute";
+import { overlaps, rangeIsOffered, rangesForDate, todayIso } from "@/lib/availability/compute";
 import { getAvailabilityExceptions, getOperatingHours } from "@/lib/availability/store";
 import { getEquipmentCatalog } from "@/lib/equipment/catalog";
 import { renderCoordinatorNewBookingEmail } from "@/lib/email/templates";
@@ -71,13 +71,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // O pedido precisa cair exatamente num dos blocos oferecidos, senao um
-    // cliente adulterado poderia gravar qualquer intervalo dentro da faixa.
-    const blocoValido = buildDaySlots(ranges, []).some(
-      (slot) => slot.inicio === payload.horaInicio && slot.fim === payload.horaFim
-    );
-
-    if (!blocoValido) {
+    // O intervalo pode cobrir varios blocos seguidos, mas precisa comecar e
+    // terminar em fronteiras de bloco e ter todos os blocos do meio oferecidos.
+    // Isso permite 14:00-17:00 sem abrir brecha para horarios arbitrarios.
+    if (!rangeIsOffered(ranges, payload.horaInicio, payload.horaFim)) {
       return NextResponse.json(
         { error: "O horario solicitado esta fora do funcionamento do laboratorio." },
         { status: 409 }

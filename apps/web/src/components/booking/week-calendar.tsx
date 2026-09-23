@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { addDays, startOfWeek, todayIso, toMinutes } from "@/lib/availability/compute";
+import type { SelectedBlock } from "@/lib/availability/compute";
 import { cn } from "@/lib/utils/cn";
 import type { DaySlot } from "@/types/operating-hours";
 
@@ -17,8 +18,8 @@ interface ScheduleDay {
 
 interface WeekCalendarProps {
   equipamentoId: string;
-  selecionado: { data: string; inicio: string; fim: string } | null;
-  onSelect: (escolha: { data: string; inicio: string; fim: string }) => void;
+  selecionados: SelectedBlock[];
+  onToggle: (bloco: SelectedBlock) => void;
 }
 
 const NOMES_CURTOS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -34,7 +35,7 @@ function rotuloIntervalo(inicio: string, fim: string) {
   return `${diaI}/${mesI} – ${diaF}/${mesF}`;
 }
 
-export function WeekCalendar({ equipamentoId, selecionado, onSelect }: WeekCalendarProps) {
+export function WeekCalendar({ equipamentoId, selecionados, onToggle }: WeekCalendarProps) {
   const hoje = todayIso();
   const [semanaRef, setSemanaRef] = useState(() => startOfWeek(hoje));
   const [dias, setDias] = useState<ScheduleDay[]>([]);
@@ -168,8 +169,9 @@ export function WeekCalendar({ equipamentoId, selecionado, onSelect }: WeekCalen
 
                   const passado = dia.data < hoje;
                   const indisponivel = bloco.status === "ocupado" || passado;
-                  const escolhido =
-                    selecionado?.data === dia.data && selecionado?.inicio === bloco.inicio;
+                  const escolhido = selecionados.some(
+                    (item) => item.data === dia.data && item.inicio === bloco.inicio
+                  );
 
                   return (
                     <button
@@ -187,7 +189,7 @@ export function WeekCalendar({ equipamentoId, selecionado, onSelect }: WeekCalen
                       )}
                       disabled={indisponivel}
                       key={`${dia.data}-${hora}`}
-                      onClick={() => onSelect({ data: dia.data, inicio: bloco.inicio, fim: bloco.fim })}
+                      onClick={() => onToggle({ data: dia.data, inicio: bloco.inicio, fim: bloco.fim })}
                       title={
                         passado ? "Data passada"
                           : bloco.status === "ocupado" ? "Já reservado"
@@ -195,7 +197,7 @@ export function WeekCalendar({ equipamentoId, selecionado, onSelect }: WeekCalen
                       }
                       type="button"
                     >
-                      {escolhido ? "Escolhido" : bloco.status === "ocupado" ? "Ocupado" : bloco.inicio}
+                      {escolhido ? "✓" : bloco.status === "ocupado" ? "Ocupado" : bloco.inicio}
                     </button>
                   );
                 })}
@@ -221,6 +223,7 @@ export function WeekCalendar({ equipamentoId, selecionado, onSelect }: WeekCalen
         <span className="inline-flex items-center gap-1.5">
           <span className="h-3 w-3 rounded border border-slate-200 bg-slate-100" /> Indisponível
         </span>
+        <span className="text-slate-400">· clique para marcar e desmarcar; horas seguidas viram um pedido só</span>
       </div>
     </div>
   );

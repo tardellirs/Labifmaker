@@ -100,6 +100,59 @@ export function rangesForDate(
   return schedule[String(weekdayOf(isoDate))] ?? [];
 }
 
+/** Uma escolha do professor na grade. */
+export interface SelectedBlock {
+  data: string;
+  inicio: string;
+  fim: string;
+}
+
+/**
+ * Junta blocos vizinhos do mesmo dia num intervalo unico.
+ *
+ * Escolher 14-15, 15-16 e 16-17 vira um pedido de 14 as 17, e nao tres. Dias
+ * diferentes seguem separados de proposito: assim a coordenacao pode aprovar um
+ * e recusar outro.
+ */
+export function mergeContiguous(blocks: SelectedBlock[]): SelectedBlock[] {
+  const ordenados = [...blocks].sort(
+    (a, b) => a.data.localeCompare(b.data) || a.inicio.localeCompare(b.inicio)
+  );
+
+  const resultado: SelectedBlock[] = [];
+
+  for (const bloco of ordenados) {
+    const anterior = resultado[resultado.length - 1];
+
+    if (anterior && anterior.data === bloco.data && anterior.fim === bloco.inicio) {
+      anterior.fim = bloco.fim;
+      continue;
+    }
+
+    resultado.push({ ...bloco });
+  }
+
+  return resultado;
+}
+
+/**
+ * O intervalo comeca e termina em fronteiras de bloco e cada bloco no meio e
+ * oferecido? Generaliza a checagem de bloco unico para intervalos maiores,
+ * sem abrir brecha para horarios arbitrarios dentro da faixa.
+ */
+export function rangeIsOffered(ranges: TimeRange[], inicio: string, fim: string) {
+  const blocos = expandRanges(ranges);
+  let cursor = inicio;
+
+  while (toMinutes(cursor) < toMinutes(fim)) {
+    const bloco = blocos.find((item) => item.inicio === cursor);
+    if (!bloco) return false;
+    cursor = bloco.fim;
+  }
+
+  return cursor === fim;
+}
+
 /**
  * Agendamento ja existente, reduzido ao que importa para o calculo.
  * `bloqueia` distingue aprovado (ocupa) de pendente (apenas sinaliza).

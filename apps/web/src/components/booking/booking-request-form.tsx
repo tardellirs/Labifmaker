@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { WeekCalendar } from "@/components/booking/week-calendar";
+import { mergeContiguous } from "@/lib/availability/compute";
+import type { SelectedBlock } from "@/lib/availability/compute";
 import type { Equipment } from "@/types";
 
 interface BookingRequestFormProps {
@@ -23,9 +25,6 @@ interface BookingRequestFormProps {
 
 const initialState = {
   equipamentoId: "",
-  dataSolicitada: "",
-  horaInicio: "",
-  horaFim: "",
   projeto: "",
   descricao: "",
   sabeOperarEquipamento: false,
@@ -38,7 +37,23 @@ export function BookingRequestForm({
 }: BookingRequestFormProps) {
   const router = useRouter();
   const [formState, setFormState] = useState(initialState);
+  const [blocos, setBlocos] = useState<SelectedBlock[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Horas seguidas no mesmo dia viram um pedido so; dias distintos ficam separados.
+  const pedidos = useMemo(() => mergeContiguous(blocos), [blocos]);
+
+  function alternarBloco(bloco: SelectedBlock) {
+    setBlocos((atuais) => {
+      const jaTem = atuais.some(
+        (item) => item.data === bloco.data && item.inicio === bloco.inicio
+      );
+
+      return jaTem
+        ? atuais.filter((item) => !(item.data === bloco.data && item.inicio === bloco.inicio))
+        : [...atuais, bloco];
+    });
+  }
 
   const availableEquipment = useMemo(
     () => equipmentCatalog.filter((equipment) => equipment.status !== "manutencao"),
@@ -65,37 +80,74 @@ export function BookingRequestForm({
     event.preventDefault();
     setSubmitting(true);
 
-    try {
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          equipamentoId: formState.equipamentoId,
-          dataSolicitada: formState.dataSolicitada,
-          horaInicio: formState.horaInicio,
-          horaFim: formState.horaFim,
-          projeto: formState.projeto,
-          descricao: formState.descricao,
-          sabeOperarEquipamento: formState.sabeOperarEquipamento,
-          concordaTermos: formState.concordaTermos
-        })
-      });
+    // Um agendamento por intervalo, enviados em sequencia: assim a coordenacao
+    // pode aprovar um dia e recusar outro. Se algum falhar, os que deram certo
+    // permanecem e so os pendentes seguem marcados na grade.
+    const falharam: SelectedBlock[] = [];
+    let ultimoErro = "";
 
-      const result = (await response.json()) as { error?: string };
+    for (const pedido of pedidos) {
+      try {
+        const response = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            equipamentoId: formState.equipamentoId,
+            dataSolicitada: pedido.data,
+            horaInicio: pedido.inicio,
+            horaFim: pedido.fim,
+            projeto: formState.projeto,
+            descricao: formState.descricao,
+            sabeOperarEquipamento: formState.sabeOperarEquipamento,
+            concordaTermos: formState.concordaTermos
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error(result.error ?? "Falha ao criar o agendamento.");
+        const result = (await response.json()) as { error?: string };
+
+        if (!response.ok) {
+          throw new Error(result.error ?? "Falha ao criar o agendamento.");
+        }
+      } catch (error) {
+        console.error(error);
+        falharam.push(pedido);
+        ultimoErro = error instanceof Error ? error.message : "Falha ao enviar a solicitação.";
       }
-
-      toast.success("Solicitação enviada para a coordenação.");
-      setFormState(initialState);
-      startTransition(() => router.refresh());
-    } catch (error) {
-      console.error(error);
-      toast.error(error instanceof Error ? error.message : "Falha ao enviar a solicitação.");
-    } finally {
-      setSubmitting(false);
     }
+
+    const enviados = pedidos.length - falharam.length;
+
+    if (enviados > 0) {
+      toast.success(
+        enviados === 1
+          ? "Solicitação enviada para a coordenação."
+          : `${enviados} solicitações enviadas para a coordenação.`
+      );
+    }
+
+    if (falharam.length > 0) {
+      toast.error(
+        enviados > 0 ? `${falharam.length} não pôde ser enviada: ${ultimoErro}` : ultimoErro
+      );
+    }
+
+    setBlocos((atuais) =>
+      atuais.filter((bloco) =>
+        falharam.some(
+          (pedido) =>
+            pedido.data === bloco.data &&
+            pedido.inicio <= bloco.inicio &&
+            pedido.fim >= bloco.fim
+        )
+      )
+    );
+
+    if (falharam.length === 0) {
+      setFormState((current) => ({ ...initialState, equipamentoId: current.equipamentoId }));
+    }
+
+    setSubmitting(false);
+    startTransition(() => router.refresh());
   }
 
   return (
@@ -122,15 +174,10 @@ export function BookingRequestForm({
             <Label htmlFor="equipamentoId">Equipamento</Label>
             <Select
               id="equipamentoId"
-              onChange={(event) =>
-                setFormState((current) => ({
-                  ...current,
-                  equipamentoId: event.target.value,
-                  dataSolicitada: "",
-                  horaInicio: "",
-                  horaFim: ""
-                }))
-              }
+              onChange={(event) => {
+                setBlocos([]);
+                setFormState((current) => ({ ...current, equipamentoId: event.target.value }));
+              }}
               value={formState.equipamentoId}
             >
               <option value="">Selecione um equipamento</option>
@@ -176,27 +223,60 @@ export function BookingRequestForm({
           <Label>Escolha o horário</Label>
           <WeekCalendar
             equipamentoId={formState.equipamentoId}
-            onSelect={(escolha) =>
-              setFormState((current) => ({
-                ...current,
-                dataSolicitada: escolha.data,
-                horaInicio: escolha.inicio,
-                horaFim: escolha.fim
-              }))
-            }
-            selecionado={
-              formState.dataSolicitada
-                ? {
-                    data: formState.dataSolicitada,
-                    inicio: formState.horaInicio,
-                    fim: formState.horaFim
-                  }
-                : null
-            }
+            onToggle={alternarBloco}
+            selecionados={blocos}
           />
         </div>
 
-        {formState.dataSolicitada ? (
+        {pedidos.length > 0 ? (
+          <div className="rounded-[20px] border border-brand-200 bg-brand-50 px-4 py-3">
+            <p className="text-sm font-medium text-brand-900">
+              {pedidos.length === 1 ? "1 horário escolhido" : `${pedidos.length} horários escolhidos`}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {pedidos.map((pedido) => {
+                const [ano, mes, dia] = pedido.data.split("-");
+
+                return (
+                  <li
+                    className="flex items-center justify-between gap-3 text-sm text-brand-800"
+                    key={`${pedido.data}-${pedido.inicio}`}
+                  >
+                    <span>
+                      {dia}/{mes}/{ano} · {pedido.inicio} às {pedido.fim}
+                    </span>
+                    <button
+                      className="text-xs text-brand-700 underline underline-offset-2 hover:text-brand-900"
+                      onClick={() =>
+                        setBlocos((atuais) =>
+                          atuais.filter(
+                            (bloco) =>
+                              !(
+                                bloco.data === pedido.data &&
+                                bloco.inicio >= pedido.inicio &&
+                                bloco.fim <= pedido.fim
+                              )
+                          )
+                        )
+                      }
+                      type="button"
+                    >
+                      remover
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {pedidos.length > 1 ? (
+              <p className="mt-2 text-xs text-brand-700">
+                Cada horário vira uma solicitação separada, avaliada individualmente pela
+                coordenação.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {blocos.length > 0 ? (
           <label className="flex items-center gap-3 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
             <Checkbox
               checked={formState.sabeOperarEquipamento}
@@ -262,9 +342,7 @@ export function BookingRequestForm({
             disabledByMaintenance ||
             submitting ||
             !formState.equipamentoId ||
-            !formState.dataSolicitada ||
-            !formState.horaInicio ||
-            !formState.horaFim
+            pedidos.length === 0
           }
           size="lg"
           type="submit"
@@ -274,7 +352,7 @@ export function BookingRequestForm({
           ) : (
             <Send className="h-4 w-4" />
           )}
-          Enviar solicitação
+          {pedidos.length > 1 ? `Enviar ${pedidos.length} solicitações` : "Enviar solicitação"}
         </Button>
       </form>
     </Card>
